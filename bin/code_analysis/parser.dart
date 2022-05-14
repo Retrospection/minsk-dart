@@ -1,6 +1,7 @@
 import 'BinaryExpressionSyntax.dart';
 import 'ExpressionSyntax.dart';
 import 'LiteralExpressionSyntax.dart';
+import 'ParenthesisedExpressionSyntax.dart';
 import 'SyntaxKind.dart';
 import 'Token.dart';
 import 'UnaryExpressionSyntax.dart';
@@ -63,6 +64,16 @@ class Parser {
 
   ExpressionSyntax parsePrimaryExpression() {
     switch (_current.kind) {
+      case SyntaxKind.openParenthesisToken:
+        var openParenthesisToken = matchToken(SyntaxKind.openParenthesisToken);
+        var expression = parseExpression();
+        var closeParenthesisToken = matchToken(SyntaxKind.closeParenthesisToken);
+        return ParenthesisedExpressionSyntax(openParenthesisToken, expression, closeParenthesisToken);
+      case SyntaxKind.trueKeyword:
+      case SyntaxKind.falseKeyword:
+        var keyword = getCurrentAndAdvance();
+        var value = keyword.kind == SyntaxKind.trueKeyword;
+        return LiteralExpressionSyntax(value, keyword);
       default:
         var numberToken = matchToken(SyntaxKind.numberToken);
         return LiteralExpressionSyntax(numberToken.value!, numberToken);

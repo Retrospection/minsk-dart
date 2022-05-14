@@ -11,10 +11,21 @@ enum SyntaxKind  {
   slashToken,
   openParenthesisToken,
   closeParenthesisToken,
+  ampersandAmpersandToken,
+  pipePipeToken,
+  equalsEqualsToken,
+  bangEqualsToken,
+  equalsToken,
+  bangToken,
+  trueKeyword,
+  falseKeyword,
+
+  identifierToken,
 
   literalExpressionSyntax,
   unaryExpressionSyntax,
   binaryExpressionSyntax,
+  parenthesisExpressionSyntax
 }
 
 extension OperatorPriority on SyntaxKind {
@@ -22,7 +33,8 @@ extension OperatorPriority on SyntaxKind {
     switch (this) {
       case SyntaxKind.plusToken:
       case SyntaxKind.minusToken:
-        return 3;
+      case SyntaxKind.bangToken:
+        return 6;
       default:
         return 0;
     }
@@ -32,9 +44,16 @@ extension OperatorPriority on SyntaxKind {
     switch (this) {
       case SyntaxKind.starToken:
       case SyntaxKind.slashToken:
-        return 2;
+        return 5;
       case SyntaxKind.plusToken:
       case SyntaxKind.minusToken:
+        return 4;
+      case SyntaxKind.equalsEqualsToken:
+      case SyntaxKind.bangEqualsToken:
+        return 3;
+      case SyntaxKind.ampersandAmpersandToken:
+        return 2;
+      case SyntaxKind.pipePipeToken:
         return 1;
       default:
         return 0;

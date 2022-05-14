@@ -5,6 +5,7 @@ import 'binding/boundBinaryExpression.dart';
 import 'binding/boundBinaryOperatorKind.dart';
 import 'binding/boundExpression.dart';
 import 'binding/boundLiteralExpression.dart';
+import 'binding/boundParenthesisedExpression.dart';
 
 class Evaluator {
   final BoundNode _root;
@@ -26,6 +27,10 @@ class Evaluator {
       return node.value;
     }
 
+    if (node is BoundParenthesisExpression) {
+      return _evaluateExpression(node.expression);
+    }
+
     throw Exception('Unexpected node ${node.kind}');
   }
 
@@ -42,6 +47,10 @@ class Evaluator {
         return (left as int) * (right as int);
       case BoundBinaryOperatorKind.division:
         return (left as int) / (right as int);
+      case BoundBinaryOperatorKind.logicalAnd:
+        return (left as bool) && (right as bool);
+      case BoundBinaryOperatorKind.logicalOr:
+        return (left as bool) || (right as bool);
       default:
         throw Exception("Unexpected binary operator ${node.kind}");
     }

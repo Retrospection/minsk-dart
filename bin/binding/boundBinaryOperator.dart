@@ -35,6 +35,8 @@ class BoundBinaryOperator {
     BoundBinaryOperator.common(SyntaxKind.plusToken, BoundBinaryOperatorKind.addition, int),
     BoundBinaryOperator.common(SyntaxKind.minusToken, BoundBinaryOperatorKind.subtraction, int),
     BoundBinaryOperator.common(SyntaxKind.starToken, BoundBinaryOperatorKind.multiplication, int),
-    BoundBinaryOperator.common(SyntaxKind.slashToken, BoundBinaryOperatorKind.division, int)
+    BoundBinaryOperator.common(SyntaxKind.slashToken, BoundBinaryOperatorKind.division, int),
+    BoundBinaryOperator.common(SyntaxKind.ampersandAmpersandToken, BoundBinaryOperatorKind.logicalAnd, bool),
+    BoundBinaryOperator.common(SyntaxKind.pipePipeToken, BoundBinaryOperatorKind.logicalOr, bool),
   ];
 }

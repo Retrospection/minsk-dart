@@ -3,6 +3,7 @@
 import '../code_analysis/BinaryExpressionSyntax.dart';
 import '../code_analysis/ExpressionSyntax.dart';
 import '../code_analysis/LiteralExpressionSyntax.dart';
+import '../code_analysis/ParenthesisedExpressionSyntax.dart';
 import '../code_analysis/SyntaxKind.dart';
 import '../code_analysis/UnaryExpressionSyntax.dart';
 import 'boundBinaryExpression.dart';
@@ -11,6 +12,7 @@ import 'boundExpression.dart';
 import 'boundLiteralExpression.dart';
 import 'boundUnaryExpression.dart';
 import 'boundUnaryOperator.dart';
+import 'boundParenthesisedExpression.dart';
 
 class Binder {
   final List<String> _diagnostics = List.empty(growable: true);
@@ -26,6 +28,8 @@ class Binder {
         return bindUnaryExpression(syntax as UnaryExpressionSyntax);
       case SyntaxKind.binaryExpressionSyntax:
         return bindBinaryExpression(syntax as BinaryExpressionSyntax);
+      case SyntaxKind.parenthesisExpressionSyntax:
+        return bindParenthesisExpression(syntax as ParenthesisedExpressionSyntax);
       default:
         throw Exception("Unexpected syntax ${syntax.kind}");
     }
@@ -54,6 +58,11 @@ class Binder {
     }
 
     return BoundBinaryExpression(left, operator!, right);
+  }
+
+  BoundParenthesisExpression bindParenthesisExpression(ParenthesisedExpressionSyntax syntax) {
+    var expression = bindExpression(syntax.expression);
+    return BoundParenthesisExpression(expression);
   }
 }
 

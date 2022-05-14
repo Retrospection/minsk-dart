@@ -29,5 +29,6 @@ class BoundUnaryOperator {
   static final List<BoundUnaryOperator> _unaryOperators = [
     BoundUnaryOperator(SyntaxKind.plusToken, BoundUnaryOperatorKind.identity, int, int),
     BoundUnaryOperator(SyntaxKind.minusToken, BoundUnaryOperatorKind.negation, int, int),
+    BoundUnaryOperator(SyntaxKind.bangToken, BoundUnaryOperatorKind.logicalNegation, int, int),
   ];
 }

@@ -1,6 +1,11 @@
+
+
 import 'package:quiver/strings.dart';
 import 'SyntaxKind.dart';
 import 'Token.dart';
+
+bool isLetter(int codeUnit) =>
+    (codeUnit >= 65 && codeUnit <= 90) || (codeUnit >= 97 && codeUnit <= 122);
 
 class Lexer {
   final String _buffer;
@@ -34,6 +39,21 @@ class Lexer {
       return Token(SyntaxKind.whitespaceToken, start, null, text);
     }
 
+    if (isLetter(_current!.codeUnitAt(0))) {
+      var start = _position;
+      while (_current != null && isLetter(_current!.codeUnitAt(0))) {
+        _advance();
+      }
+      var text = _buffer.substring(start, _position);
+      if (text == 'true') {
+        return Token(SyntaxKind.trueKeyword, start, null, 'true');
+      } else if (text == 'false') {
+        return Token(SyntaxKind.falseKeyword, start, null, 'false');
+      } else {
+        return Token(SyntaxKind.identifierToken, start, null, text);
+      }
+    }
+
     if (_current == '+'){
       return Token(SyntaxKind.plusToken, _position++, null, '+');
     } else if (_current == '-') {
@@ -42,7 +62,39 @@ class Lexer {
       return Token(SyntaxKind.starToken, _position++, null, '*');
     } else if (_current == '/') {
       return Token(SyntaxKind.slashToken, _position++, null, '/');
-    }
+    } else if (_current == '(') {
+      return Token(SyntaxKind.openParenthesisToken, _position++, null, '(');
+    } else if (_current == ')') {
+      return Token(SyntaxKind.closeParenthesisToken, _position++, null, ')');
+    } else if (_current == '&') {
+      if (_lookahead == '&') {
+        var position = _position;
+        _position += 2;
+        return Token(SyntaxKind.ampersandAmpersandToken, position, null, '&&');
+      }
+    } else if (_current == '|') {
+      if (_lookahead == '|') {
+        var position = _position;
+        _position += 2;
+        return Token(SyntaxKind.pipePipeToken, position, null, '||');
+      }
+    } else if (_current == '!') {
+      if (_lookahead == '=') {
+        var position = _position;
+        _position += 2;
+        return Token(SyntaxKind.bangEqualsToken, position, null, '!=');
+      } else {
+        return Token(SyntaxKind.bangToken, _position++, null, '!');
+      }
+    } else if (_current == '=') {
+      if (_lookahead == '=') {
+        var position = _position;
+        _position += 2;
+        return Token(SyntaxKind.equalsEqualsToken, position, null, '==');
+      } else {
+        return Token(SyntaxKind.equalsToken, _position++, null, '=');
+      }
+    } 
     
     _diagnostics.add('ERROR: bad character input: ${_current!}');
     return Token(SyntaxKind.badToken, _position++, null, '');
@@ -53,11 +105,11 @@ class Lexer {
   }
 
   String? get _current {
-    final length = _buffer.length;
-    if (_position >= length) {
-      return null;
-    }
-    return _buffer[_position];
+    return _peek(0);
+  }
+
+  String? get _lookahead {
+    return _peek(1);
   }
 
   Runes? get _currentRunes {
@@ -65,6 +117,14 @@ class Lexer {
       return null;
     }
     return Runes(_current!);
+  }
+
+  String? _peek(int offset) {
+    final length = _buffer.length + offset;
+    if (_position >= length) {
+      return null;
+    }
+    return _buffer[_position];
   }
 
 }
