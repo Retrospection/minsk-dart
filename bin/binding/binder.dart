@@ -6,6 +6,7 @@ import '../code_analysis/LiteralExpressionSyntax.dart';
 import '../code_analysis/ParenthesisedExpressionSyntax.dart';
 import '../code_analysis/SyntaxKind.dart';
 import '../code_analysis/UnaryExpressionSyntax.dart';
+import '../common/diagnostics.dart';
 import 'boundBinaryExpression.dart';
 import 'boundBinaryOperator.dart';
 import 'boundExpression.dart';
@@ -15,9 +16,9 @@ import 'boundUnaryOperator.dart';
 import 'boundParenthesisedExpression.dart';
 
 class Binder {
-  final List<String> _diagnostics = List.empty(growable: true);
+  final DiagnosticBag _diagnostics = DiagnosticBag();
 
-  Iterator<String> get diagnostics => _diagnostics.iterator;
+  Iterable<Diagnostic> get diagnostics => _diagnostics.diagnostics;
 
   BoundExpression bindExpression(ExpressionSyntax syntax) {
     switch (syntax.kind)
@@ -42,7 +43,7 @@ class Binder {
   BoundUnaryExpression bindUnaryExpression(UnaryExpressionSyntax syntax) {
     var operator = BoundUnaryOperator.bind(syntax.kind, syntax.operand.runtimeType);
     if (operator == null) {
-      _diagnostics.add('ERROR: Unsupported unary operator kind: ${syntax.kind}, operand type: ${syntax.operand.runtimeType}');
+      _diagnostics.reportUndefinedUnaryOperator(syntax.operator.span, syntax.operator.text, syntax.operand.runtimeType);
     }
     var operand = bindExpression(syntax);
     return BoundUnaryExpression(operator!, operand);
@@ -54,7 +55,7 @@ class Binder {
     var operator = BoundBinaryOperator.bind(syntax.operator.kind, left.type, right.type);
 
     if (operator == null) {
-      _diagnostics.add('ERROR: Unsupported binary operator ${syntax.kind} with type ${left.type} and type ${right.type}');
+      _diagnostics.reportUndefinedBinaryOperator(syntax.operator.span, syntax.operator.text, syntax.left.runtimeType, syntax.right.runtimeType);
     }
 
     return BoundBinaryExpression(left, operator!, right);

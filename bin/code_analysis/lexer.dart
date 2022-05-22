@@ -1,20 +1,22 @@
 
 
 import 'package:quiver/strings.dart';
+import '../common/textSpan.dart';
 import 'SyntaxKind.dart';
 import 'Token.dart';
+import '../common/diagnostics.dart';
 
 bool isLetter(int codeUnit) =>
     (codeUnit >= 65 && codeUnit <= 90) || (codeUnit >= 97 && codeUnit <= 122);
 
 class Lexer {
   final String _buffer;
-  final List<String> _diagnostics = List.empty(growable: true);
+  final DiagnosticBag _diagnosticBag = DiagnosticBag();
   int _position = 0;
 
   Lexer(this._buffer);
 
-  List<String> get diagnostics => _diagnostics;
+  Iterable<Diagnostic> get diagnostics => _diagnosticBag.diagnostics;
 
   Token lex() {
     if (_current == null) {
@@ -96,7 +98,7 @@ class Lexer {
       }
     } 
     
-    _diagnostics.add('ERROR: bad character input: ${_current!}');
+    _diagnosticBag.reportBadCharacter(TextSpan(_position, 1), _current);
     return Token(SyntaxKind.badToken, _position++, null, '');
   }
 

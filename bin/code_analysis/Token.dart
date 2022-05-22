@@ -1,4 +1,5 @@
 
+import '../common/textSpan.dart';
 import 'SyntaxKind.dart';
 import 'SyntaxNode.dart';
 
@@ -21,4 +22,6 @@ class Token extends SyntaxNode {
   String get text => _text;
   int get position => _position;
   Object? get value => _value;
+
+  TextSpan get span => TextSpan(_position, _text.length);
 }

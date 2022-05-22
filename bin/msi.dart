@@ -1,10 +1,9 @@
 import 'dart:io';
 import 'package:colorize/colorize.dart';
-import 'binding/binder.dart';
 import 'code_analysis/SyntaxNode.dart';
 import 'code_analysis/Token.dart';
 import 'code_analysis/parser.dart';
-import 'evaluator.dart';
+import 'compilation.dart';
 
 
 
@@ -19,17 +18,16 @@ void main(List<String> arguments) {
 
     var parser = Parser(input);
     var tree = parser.parse();
-    var binder = Binder();
-    var boundedExpression = binder.bindExpression(tree);
-    var evaluator = Evaluator(boundedExpression);
-    if (parser.diagnostics.isEmpty) {
-      prettyPrint(tree);
+    var compilation = Compilation(tree);
+    var result = compilation.evaluate();
+    if (result.diagnostic.isEmpty) {
+      prettyPrint(tree.root);
     } else {
       for (var diagnostic in parser.diagnostics) {
         printRed(diagnostic);
       }
     }
-    print(evaluator.evaluate());
+    print(result.value);
   }
 }
 

@@ -3,36 +3,39 @@ import 'ExpressionSyntax.dart';
 import 'LiteralExpressionSyntax.dart';
 import 'ParenthesisedExpressionSyntax.dart';
 import 'SyntaxKind.dart';
+import 'SyntaxTree.dart';
 import 'Token.dart';
 import 'UnaryExpressionSyntax.dart';
 import 'lexer.dart';
+import '../common/diagnostics.dart';
 
 class Parser {
   late List<Token> _tokens;
-  final List<String> _diagnostics = List.empty(growable: true);
+  final DiagnosticBag _diagnostics = DiagnosticBag();
   int _position = 0;
 
   Parser(String text) {
     var lexer = Lexer(text);
 
     List<Token> tokens = List.empty(growable: true);
-    Token token = lexer.lex();
-    while (token.kind != SyntaxKind.eofToken) {
+    Token token;
+    do {
+      token = lexer.lex();
       if (token.kind != SyntaxKind.badToken && token.kind != SyntaxKind.whitespaceToken) {
         tokens.add(token);
       }
-      token = lexer.lex();
-    }
+    } while (token.kind != SyntaxKind.eofToken);
 
     _tokens = tokens;
-    _diagnostics.addAll(lexer.diagnostics);
+    _diagnostics.batchAdd(lexer.diagnostics);
   }
 
-  List<String> get diagnostics => _diagnostics;
+  Iterable<Diagnostic> get diagnostics => _diagnostics.diagnostics;
 
-  ExpressionSyntax parse() {
+  SyntaxTree parse() {
     var expression = parseExpression();
-    return expression;
+    var eofToken = matchToken(SyntaxKind.eofToken);
+    return SyntaxTree(_diagnostics.diagnostics, expression, eofToken);
   }
 
   ExpressionSyntax parseExpression({int priority = 0}) {
@@ -91,7 +94,7 @@ class Parser {
       return getCurrentAndAdvance();
     }
 
-    _diagnostics.add('ERROR: Unexpected token <${_current.kind}>, expected <$kind>');
+    _diagnostics.reportUnexpectedToken(_current.span, _current.kind, kind);
     return Token(kind, _current.position, null, '');
   }
 
