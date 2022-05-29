@@ -13,93 +13,108 @@ class Lexer {
   final String _buffer;
   final DiagnosticBag _diagnosticBag = DiagnosticBag();
   int _position = 0;
+  String _text = '';
+  Object? _value = null;
+  SyntaxKind _kind = SyntaxKind.badToken;
 
   Lexer(this._buffer);
 
   Iterable<Diagnostic> get diagnostics => _diagnosticBag.diagnostics;
 
   Token lex() {
-    if (_current == null) {
-      return Token(SyntaxKind.eofToken, _position, null, '');
-    }
 
-    if (isDigit(_currentRunes!.first)) {
-      var start = _position;
+    var start = _position;
+
+    if (start == _buffer.length) {
+      _kind = SyntaxKind.eofToken;
+    } else if (isDigit(_currentRunes!.first)) {
       while (_currentRunes != null && isDigit(_currentRunes!.first)) {
         _advance();
       }
-      var text = _buffer.substring(start, _position);
-      return Token(SyntaxKind.numberToken, start, int.parse(text), text);
-    }
-
-    if (isWhitespace(_currentRunes!.first)) {
-      var start = _position;
+      _text = _buffer.substring(start, _position);
+      _value = int.parse(_text);
+      _kind = SyntaxKind.numberToken;
+    } else if (isWhitespace(_currentRunes!.first)) {
       while (_currentRunes != null && isWhitespace(_currentRunes!.first)) {
         _advance();
       }
-      var text = _buffer.substring(start, _position);
-      return Token(SyntaxKind.whitespaceToken, start, null, text);
-    }
-
-    if (isLetter(_current!.codeUnitAt(0))) {
-      var start = _position;
+      _text = _buffer.substring(start, _position);
+      _kind = SyntaxKind.whitespaceToken;
+    } else if (isLetter(_current!.codeUnitAt(0))) {
       while (_current != null && isLetter(_current!.codeUnitAt(0))) {
         _advance();
       }
       var text = _buffer.substring(start, _position);
       if (text == 'true') {
-        return Token(SyntaxKind.trueKeyword, start, null, 'true');
+        _kind = SyntaxKind.trueKeyword;
+        _text = 'true';
       } else if (text == 'false') {
-        return Token(SyntaxKind.falseKeyword, start, null, 'false');
+        _kind = SyntaxKind.falseKeyword;
+        _text = 'false';
       } else {
-        return Token(SyntaxKind.identifierToken, start, null, text);
+        _kind = SyntaxKind.identifierToken;
+        _text = text;
       }
-    }
-
-    if (_current == '+'){
-      return Token(SyntaxKind.plusToken, _position++, null, '+');
+    } else if (_current == '+') {
+      _kind = SyntaxKind.plusToken;
+      _text = '+';
+      _advance();
     } else if (_current == '-') {
-      return Token(SyntaxKind.minusToken, _position++, null, '-');
+      _kind = SyntaxKind.minusToken;
+      _text = '-';
+      _advance();
     } else if (_current == '*') {
-      return Token(SyntaxKind.starToken, _position++, null, '*');
+      _kind = SyntaxKind.starToken;
+      _text = '*';
+      _advance();
     } else if (_current == '/') {
-      return Token(SyntaxKind.slashToken, _position++, null, '/');
+      _kind = SyntaxKind.slashToken;
+      _text = '/';
+      _advance();
     } else if (_current == '(') {
-      return Token(SyntaxKind.openParenthesisToken, _position++, null, '(');
+      _kind = SyntaxKind.openParenthesisToken;
+      _text = '(';
+      _advance();
     } else if (_current == ')') {
-      return Token(SyntaxKind.closeParenthesisToken, _position++, null, ')');
+      _kind = SyntaxKind.closeParenthesisToken;
+      _text = ')';
+      _advance();
     } else if (_current == '&') {
       if (_lookahead == '&') {
-        var position = _position;
+        _kind = SyntaxKind.ampersandAmpersandToken;
+        _text = '&&';
         _position += 2;
-        return Token(SyntaxKind.ampersandAmpersandToken, position, null, '&&');
       }
     } else if (_current == '|') {
       if (_lookahead == '|') {
-        var position = _position;
+        _kind = SyntaxKind.pipePipeToken;
+        _text = '||';
         _position += 2;
-        return Token(SyntaxKind.pipePipeToken, position, null, '||');
       }
     } else if (_current == '!') {
       if (_lookahead == '=') {
-        var position = _position;
+        _kind = SyntaxKind.bangEqualsToken;
+        _text = '!=';
         _position += 2;
-        return Token(SyntaxKind.bangEqualsToken, position, null, '!=');
       } else {
-        return Token(SyntaxKind.bangToken, _position++, null, '!');
+        _kind = SyntaxKind.bangToken;
+        _text = '!';
+        _advance();
       }
     } else if (_current == '=') {
       if (_lookahead == '=') {
-        var position = _position;
+        _kind = SyntaxKind.equalsEqualsToken;
+        _text = '==';
         _position += 2;
-        return Token(SyntaxKind.equalsEqualsToken, position, null, '==');
       } else {
-        return Token(SyntaxKind.equalsToken, _position++, null, '=');
+        _kind = SyntaxKind.equalsToken;
+        _text = '=';
+        _advance();
       }
-    } 
-    
-    _diagnosticBag.reportBadCharacter(TextSpan(_position, 1), _current);
-    return Token(SyntaxKind.badToken, _position++, null, '');
+    } else {
+      _diagnosticBag.reportBadCharacter(TextSpan(_position, 1), _current);
+    }
+    return Token(_kind, start, _value, _text);
   }
 
   void _advance() {
