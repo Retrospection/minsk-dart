@@ -1,16 +1,21 @@
 
 
+import 'dart:collection';
+
 import 'binding/BoundNode.dart';
+import 'binding/boundAssignmentExpression.dart';
 import 'binding/boundBinaryExpression.dart';
 import 'binding/boundBinaryOperatorKind.dart';
 import 'binding/boundExpression.dart';
 import 'binding/boundLiteralExpression.dart';
 import 'binding/boundParenthesisedExpression.dart';
+import 'code_analysis/VariableSymbol.dart';
 
 class Evaluator {
   final BoundNode _root;
+  final HashMap<VariableSymbol, Object?> _symbols;
 
-  Evaluator(this._root);
+  Evaluator(this._root, this._symbols);
 
   BoundNode get root => _root;
 
@@ -29,6 +34,12 @@ class Evaluator {
 
     if (node is BoundParenthesisExpression) {
       return _evaluateExpression(node.expression);
+    }
+
+    if (node is BoundAssignmentExpression) {
+      var value = _evaluateExpression(node.expr);
+      _symbols[node.symbol] = value;
+      return value;
     }
 
     throw Exception('Unexpected node ${node.kind}');

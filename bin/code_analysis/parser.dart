@@ -1,3 +1,4 @@
+import 'AssignmentExpressionSyntax.dart';
 import 'BinaryExpressionSyntax.dart';
 import 'ExpressionSyntax.dart';
 import 'LiteralExpressionSyntax.dart';
@@ -38,13 +39,28 @@ class Parser {
     return SyntaxTree(_diagnostics.diagnostics, expression, eofToken);
   }
 
-  ExpressionSyntax parseExpression({int priority = 0}) {
+  ExpressionSyntax parseExpression() {
+    if (_current.kind == SyntaxKind.identifierToken && _lookahead.kind == SyntaxKind.equalsToken) {
+      return parseAssignmentExpression();
+    } else {
+      return parseBinaryExpression();
+    }
+  }
+
+  ExpressionSyntax parseAssignmentExpression() {
+    var identifier = matchToken(SyntaxKind.identifierToken);
+    var equalsToken = matchToken(SyntaxKind.equalsToken);
+    var expression = parseExpression();
+    return AssignmentExpressionSyntax(identifier, equalsToken, expression);
+  }
+
+  ExpressionSyntax parseBinaryExpression({int priority = 0}) {
     ExpressionSyntax left;
 
     var unaryOperatorPriority = _current.kind.getUnaryOperatorPriority();
     if (unaryOperatorPriority != 0 && unaryOperatorPriority >= priority) {
       var operatorToken = getCurrentAndAdvance();
-      var operand = parseExpression(priority: unaryOperatorPriority);
+      var operand = parseBinaryExpression(priority: unaryOperatorPriority);
       left = UnaryExpressionSyntax(operatorToken, operand);
     } else {
       left = parsePrimaryExpression();
@@ -58,7 +74,7 @@ class Parser {
       }
 
       var operatorToken = getCurrentAndAdvance();
-      var right = parseExpression(priority: binaryOperatorPriority);
+      var right = parseBinaryExpression(priority: binaryOperatorPriority);
       left = BinaryExpressionSyntax(left, operatorToken, right);
     }
 
@@ -99,6 +115,7 @@ class Parser {
   }
 
   Token get _current => _peek(0);
+  Token get _lookahead => _peek(1);
 
   Token _peek(int offset) {
     int position = _position + offset;
@@ -108,6 +125,8 @@ class Parser {
 
     return _tokens[position];
   }
+
+
 
 
 

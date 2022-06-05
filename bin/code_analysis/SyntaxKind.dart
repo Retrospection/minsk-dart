@@ -25,7 +25,8 @@ enum SyntaxKind  {
   literalExpressionSyntax,
   unaryExpressionSyntax,
   binaryExpressionSyntax,
-  parenthesisExpressionSyntax
+  parenthesisExpressionSyntax,
+  assignmentExpressionSyntax,
 }
 
 extension OperatorPriority on SyntaxKind {

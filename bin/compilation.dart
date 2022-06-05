@@ -1,8 +1,11 @@
 
 
+import 'dart:collection';
+
 import 'binding/binder.dart';
 import 'code_analysis/ExpressionSyntax.dart';
 import 'code_analysis/SyntaxTree.dart';
+import 'code_analysis/VariableSymbol.dart';
 import 'common/diagnostics.dart';
 import 'evaluator.dart';
 
@@ -21,12 +24,13 @@ class Compilation {
   Compilation(this._tree);
 
   EvaluationResult evaluate() {
-    var binder = Binder();
+    var symbols = HashMap<VariableSymbol, Object?>();
+    var binder = Binder(symbols);
     var boundedExpression = binder.bindExpression(_tree.root as ExpressionSyntax);
     var diagnostics = _tree.diagnostic.toList();
     diagnostics.addAll(binder.diagnostics);
 
-    var evaluator = Evaluator(boundedExpression);
+    var evaluator = Evaluator(boundedExpression, symbols);
     var value = evaluator.evaluate();
     var diagnosticBag = DiagnosticBag();
     diagnosticBag.batchAdd(diagnostics);

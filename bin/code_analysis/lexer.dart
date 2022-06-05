@@ -137,11 +137,11 @@ class Lexer {
   }
 
   String? _peek(int offset) {
-    final length = _buffer.length + offset;
-    if (_position >= length) {
+    final end = _position + offset;
+    if (end >= _buffer.length) {
       return null;
     }
-    return _buffer[_position];
+    return _buffer[end];
   }
 
 }

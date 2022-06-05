@@ -1,12 +1,17 @@
 
 
+import 'dart:collection';
+
+import '../code_analysis/AssignmentExpressionSyntax.dart';
 import '../code_analysis/BinaryExpressionSyntax.dart';
 import '../code_analysis/ExpressionSyntax.dart';
 import '../code_analysis/LiteralExpressionSyntax.dart';
 import '../code_analysis/ParenthesisedExpressionSyntax.dart';
 import '../code_analysis/SyntaxKind.dart';
 import '../code_analysis/UnaryExpressionSyntax.dart';
+import '../code_analysis/VariableSymbol.dart';
 import '../common/diagnostics.dart';
+import 'boundAssignmentExpression.dart';
 import 'boundBinaryExpression.dart';
 import 'boundBinaryOperator.dart';
 import 'boundExpression.dart';
@@ -20,9 +25,15 @@ class Binder {
 
   Iterable<Diagnostic> get diagnostics => _diagnostics.diagnostics;
 
+  final HashMap<VariableSymbol, Object?> _symbols;
+
+  Binder(this._symbols);
+
   BoundExpression bindExpression(ExpressionSyntax syntax) {
     switch (syntax.kind)
     {
+      case SyntaxKind.assignmentExpressionSyntax:
+        return bindAssignmentExpression(syntax as AssignmentExpressionSyntax);
       case SyntaxKind.literalExpressionSyntax:
         return bindLiteralExpression(syntax as LiteralExpressionSyntax);
       case SyntaxKind.unaryExpressionSyntax:
@@ -34,6 +45,21 @@ class Binder {
       default:
         throw Exception("Unexpected syntax ${syntax.kind}");
     }
+  }
+
+
+  BoundExpression bindAssignmentExpression(AssignmentExpressionSyntax syntax) {
+    var name = syntax.identifier.text;
+    var boundExpression = bindExpression(syntax.expr);
+    var currentSymbolMaybeSameName = _symbols.keys.where((el) => el.name == name);
+    if (currentSymbolMaybeSameName.isNotEmpty) {
+      _symbols.remove(currentSymbolMaybeSameName.first);
+    }
+
+    var variable = VariableSymbol(name, syntax.expr.runtimeType);
+    _symbols[variable] = null;
+    return BoundAssignmentExpression(variable, boundExpression);
+
   }
 
   BoundLiteralExpression bindLiteralExpression(LiteralExpressionSyntax syntax) {
